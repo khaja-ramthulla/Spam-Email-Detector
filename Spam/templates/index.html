@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Spam Email Classifier</title>
+
+<style>
+
+:root{
+
+    --bg:#f8fafc;
+    --card:rgba(255,255,255,0.7);
+
+    --text:#0f172a;
+    --muted:#64748b;
+
+    --border:rgba(0,0,0,.08);
+
+    --success:#16a34a;
+    --danger:#dc2626;
+
+    --shadow:
+    0 10px 30px rgba(0,0,0,.08);
+
+}
+
+@media(prefers-color-scheme:dark){
+
+:root{
+
+    --bg:#020617;
+
+    --card:rgba(15,23,42,.65);
+
+    --text:#f8fafc;
+
+    --muted:#94a3b8;
+
+    --border:rgba(255,255,255,.08);
+
+    --shadow:
+    0 10px 40px rgba(0,0,0,.4);
+
+}
+
+}
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+}
+
+html{
+scroll-behavior:smooth;
+}
+
+body{
+
+font-family:
+Inter,
+system-ui,
+sans-serif;
+
+background:var(--bg);
+
+color:var(--text);
+
+min-height:100vh;
+
+display:flex;
+
+justify-content:center;
+
+align-items:center;
+
+padding:24px;
+
+position:relative;
+
+overflow-x:hidden;
+}
+
+body::before{
+
+content:"";
+
+position:fixed;
+
+width:500px;
+height:500px;
+
+border-radius:50%;
+
+top:-250px;
+right:-150px;
+
+background:
+radial-gradient(
+circle,
+rgba(59,130,246,.12),
+transparent
+);
+
+pointer-events:none;
+}
+
+body::after{
+
+content:"";
+
+position:fixed;
+
+width:450px;
+height:450px;
+
+border-radius:50%;
+
+bottom:-250px;
+left:-150px;
+
+background:
+radial-gradient(
+circle,
+rgba(139,92,246,.12),
+transparent
+);
+
+pointer-events:none;
+}
+
+.container{
+
+width:100%;
+
+max-width:820px;
+
+background:var(--card);
+
+backdrop-filter:
+blur(20px);
+
+-webkit-backdrop-filter:
+blur(20px);
+
+border:1px solid var(--border);
+
+border-radius:28px;
+
+padding:40px;
+
+box-shadow:var(--shadow);
+
+transition:.3s;
+}
+
+.header{
+
+text-align:center;
+
+margin-bottom:32px;
+}
+
+.header h1{
+
+font-size:
+clamp(
+2rem,
+4vw,
+3rem
+);
+
+font-weight:800;
+
+letter-spacing:-1px;
+
+margin-bottom:10px;
+}
+
+.header p{
+
+color:var(--muted);
+
+font-size:1rem;
+}
+
+textarea{
+
+width:100%;
+
+min-height:260px;
+
+resize:vertical;
+
+padding:22px;
+
+font-size:16px;
+
+line-height:1.7;
+
+border-radius:18px;
+
+background:
+rgba(255,255,255,.45);
+
+border:1px solid var(--border);
+
+outline:none;
+
+color:var(--text);
+
+transition:.25s;
+}
+
+textarea:focus{
+
+transform:
+translateY(-2px);
+
+box-shadow:
+0 0 0 4px
+rgba(59,130,246,.12);
+
+border-color:
+rgba(59,130,246,.3);
+}
+
+.button-container{
+
+display:flex;
+
+gap:12px;
+
+margin-top:20px;
+}
+
+button{
+
+flex:1;
+
+padding:15px;
+
+border:none;
+
+border-radius:14px;
+
+font-size:15px;
+
+font-weight:700;
+
+cursor:pointer;
+
+transition:.25s;
+}
+
+.predict-btn{
+
+background:#111827;
+
+color:white;
+}
+
+.predict-btn:hover{
+
+transform:
+translateY(-2px);
+
+box-shadow:
+0 10px 20px
+rgba(0,0,0,.15);
+}
+
+.clear-btn{
+
+background:
+transparent;
+
+border:1px solid var(--border);
+
+color:var(--text);
+}
+
+.clear-btn:hover{
+
+background:
+rgba(0,0,0,.04);
+}
+
+.result{
+
+display:none;
+
+margin-top:30px;
+
+padding-top:30px;
+
+border-top:
+1px solid var(--border);
+
+animation:
+fadeUp .4s ease;
+}
+
+@keyframes fadeUp{
+
+from{
+
+opacity:0;
+
+transform:
+translateY(15px);
+}
+
+to{
+
+opacity:1;
+
+transform:
+translateY(0);
+}
+
+}
+
+.badge{
+
+display:inline-flex;
+
+align-items:center;
+
+padding:12px 18px;
+
+border-radius:999px;
+
+font-size:15px;
+
+font-weight:700;
+
+letter-spacing:.3px;
+}
+
+.spam{
+
+background:
+rgba(220,38,38,.12);
+
+color:
+var(--danger);
+}
+
+.ham{
+
+background:
+rgba(22,163,74,.12);
+
+color:
+var(--success);
+}
+
+.stats{
+
+margin-top:24px;
+}
+
+.stat{
+
+display:flex;
+
+justify-content:space-between;
+
+margin-bottom:12px;
+
+font-size:15px;
+}
+
+.progress{
+
+width:100%;
+
+height:12px;
+
+background:
+rgba(0,0,0,.08);
+
+border-radius:999px;
+
+overflow:hidden;
+}
+
+.progress-fill{
+
+height:100%;
+
+width:0;
+
+transition:1s ease;
+}
+
+.keyword-box{
+
+margin-top:24px;
+}
+
+.keyword-title{
+
+font-weight:700;
+
+margin-bottom:12px;
+}
+
+.keyword{
+
+display:inline-flex;
+
+align-items:center;
+
+padding:8px 14px;
+
+border-radius:999px;
+
+border:1px solid var(--border);
+
+background:
+rgba(255,255,255,.35);
+
+margin:5px;
+
+font-size:14px;
+}
+
+.loading{
+
+display:none;
+
+margin-top:24px;
+
+text-align:center;
+
+color:var(--muted);
+
+font-weight:500;
+}
+
+.footer{
+
+margin-top:30px;
+
+text-align:center;
+
+font-size:13px;
+
+color:var(--muted);
+}
+
+@media(max-width:768px){
+
+.container{
+
+padding:24px;
+}
+
+.button-container{
+
+flex-direction:column;
+}
+
+textarea{
+
+min-height:220px;
+}
+
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="header">
+<h1><h1>Spam Shield AI</h1></h1>
+<p>
+Intelligent email analysis powered by NLP and Machine Learning
+</p>
+</div>
+
+<textarea
+id="emailText"
+placeholder="Paste your email or message here..."></textarea>
+
+<div class="button-container">
+
+<button
+class="predict-btn"
+onclick="analyzeEmail()">
+Analyze Email
+</button>
+
+<button
+class="clear-btn"
+onclick="clearAll()">
+Clear
+</button>
+
+</div>
+
+<div class="loading" id="loading">
+Analyzing...
+</div>
+
+<div class="result" id="resultCard">
+
+<div id="badgeContainer"></div>
+
+<div class="stats">
+
+<div class="stat">
+<span>Confidence</span>
+<span id="confidenceValue">0%</span>
+</div>
+
+<div class="progress">
+<div
+id="confidenceBar"
+class="progress-fill">
+</div>
+</div>
+
+</div>
+
+<div class="keyword-box">
+
+<div class="keyword-title">
+Suspicious Keywords
+</div>
+
+<div id="keywords"></div>
+
+</div>
+
+</div>
+
+<div class="footer">
+Spam Detection using TF-IDF + Naive Bayes
+</div>
+
+</div>
+
+<script>
+
+async function analyzeEmail(){
+
+    const text =
+    document.getElementById(
+        "emailText"
+    ).value.trim();
+
+    if(!text){
+        alert("Please enter email text.");
+        return;
+    }
+
+    document.getElementById(
+        "loading"
+    ).style.display = "block";
+
+    try{
+
+        const formData =
+        new FormData();
+
+        formData.append(
+            "email",
+            text
+        );
+
+        const response =
+        await fetch(
+            "/predict",
+            {
+                method:"POST",
+                body:formData
+            }
+        );
+
+        const data =
+        await response.json();
+
+        document.getElementById(
+            "loading"
+        ).style.display = "none";
+
+        document.getElementById(
+            "resultCard"
+        ).style.display = "block";
+
+        let badgeClass =
+        data.prediction === "SPAM"
+        ? "spam"
+        : "ham";
+
+        document.getElementById(
+            "badgeContainer"
+        ).innerHTML = `
+            <span class="badge ${badgeClass}">
+                ${data.prediction}
+            </span>
+        `;
+
+        document.getElementById(
+            "confidenceValue"
+        ).innerText =
+        data.confidence + "%";
+
+        const bar =
+        document.getElementById(
+            "confidenceBar"
+        );
+
+        bar.style.width =
+        data.confidence + "%";
+
+        bar.style.background =
+        data.prediction === "SPAM"
+        ? "#dc2626"
+        : "#16a34a";
+
+        let keywordHTML = "";
+
+        if(data.keywords &&
+           data.keywords.length > 0){
+
+            data.keywords.forEach(
+                keyword => {
+
+                keywordHTML += `
+                <span class="keyword">
+                    ${keyword}
+                </span>`;
+            });
+
+        }else{
+
+            keywordHTML =
+            "<span class='keyword'>No suspicious keywords detected</span>";
+        }
+
+        document.getElementById(
+            "keywords"
+        ).innerHTML =
+        keywordHTML;
+
+    }
+
+    catch(error){
+
+        document.getElementById(
+            "loading"
+        ).style.display =
+        "none";
+
+        console.error(error);
+
+        alert(
+            "Something went wrong."
+        );
+    }
+}
+
+function clearAll(){
+
+    document.getElementById(
+        "emailText"
+    ).value = "";
+
+    document.getElementById(
+        "resultCard"
+    ).style.display = "none";
+
+}
+
+</script>
+
+</body>
+</html>
